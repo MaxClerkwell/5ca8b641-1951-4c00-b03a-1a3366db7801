@@ -1,27 +1,186 @@
 \documentclass{dcbl/challenge}
 
-\setdoctitle{Der Titel meines Dokuments}
+\setdoctitle{Libraries \& Linking}
 \setdocauthor{Stephan Bökelmann}
 \setdocemail{sboekelmann@ep1.rub.de}
 \setdocinstitute{AG Physik der Hadronen und Kerne}
-
+\usepackage{listings}
+\usepackage{hyperref}
+\lstset{frame=tb,
+    language=C,
+    aboveskip=3mm,
+    belowskip=3mm,
+    showstringspaces=false,
+    columns=flexible,
+    basicstyle={\small\ttfamily},
+    numbers=none,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=3
+}
 
 \begin{document}
 
-Jedes Challenge-Blatt beginnt mit einer kurzen Einleitung, die einen Kontext für den jeweiligen Zettel setzt. 
-
-\section*{Aufgaben}
+\section*{Exercises}
 \begin{aufgabe}
-    Löse die Gleichung $x^2 - 5x + 6 = 0$.
+    Write a program called \texttt{main1.c}, that calls an arbitrary pure-function with the prototype \texttt{int f(int x, int y)}.
+    Have the main only have one line, which returns the result of the function to the shell.
+    First, define the function before the main, and run \texttt{gcc -E main1.c -o 1.i}.
+    This will only execute the preprocessor.
+    Then, copy only the function \texttt{f(int, int)} with its full definition into a new file called \texttt{f.c}, that is located in the same directory as \texttt{main.c}.
+    Write a second \texttt{main2.c} that uses the \texttt{\#include "f.c"} preprocessor-directive to include the file \texttt{f.c} and run the program \texttt{gcc -E main2.c -o 2.i}.
+    Use \texttt{vimdiff} to inspect both of the files.
+    Explain what you see.
 \end{aufgabe}
 
-\begin{aufgabe}[Für Fortgeschrittene]
-    Beweise den Satz des Pythagoras.
+\begin{aufgabe}
+    Run \texttt{gcc -c main1.c -o 1.o}, and inspect the object file using \texttt{objdump -D -t -s -x 1.o}.
+    Inspect the section \texttt{.text} of the object file starting with the address of your main function.
+    Can you find the function call? 
+    What does it say?
+    What would you expect the object-file of \texttt{main2.c} to look like?
+\end{aufgabe}
+    
+\begin{aufgabe}
+    Write a file called \texttt{f.h}, that only contains the following function declaration statement: \texttt{int f(int,int);};
+    Write a file called \texttt{f.c}, that contains the following function definition: \texttt{int f(int x, int y){return x+y;}}.
+    Write a file called \texttt{main3.c}, that contains the following main function definition: \texttt{int main(){return f(1,2);}}.
+    Run \texttt{gcc -c main3.c -o 3.o \&\& gcc -c f.c -o f.o}
+    Inspect both files with \texttt{objdump}.
+    What happend to the jump, that you found in the object-file of \texttt{1.o}?
 \end{aufgabe}
 
-\section*{Anmerkungen}
+\begin{aufgabe}
+    Try to compile \texttt{gcc main3.c -o 3.elf}. Why does the linker crash?
+\end{aufgabe}
+
+\begin{aufgabe}
+    Try to compile it again but additionally, hand over the object-file \texttt{f.o} as in the following command: \texttt{gcc main3.c f.o -o 3.elf}.
+    Explain why the linker doesn't crash now.
+\end{aufgabe}
+
+\begin{aufgabe}
+    You should now have figured out, that the linker serves two purposes:
+    \begin{enumerate}
+        \item It links functions defined in the object-files
+        \item It creates an executable with appropriate start-up code from the operating-system.
+    \end{enumerate}
+    Write a file called \texttt{main4.c}, that contains the following main function definition:
+    \begin{lstlisting}
+    #include <math.h>
+    int main(){
+        return sqrt(4);
+    }
+    \end{lstlisting}
+    Try compiling it with the two following commands:
+    \begin{enumerate}
+        \item \texttt{gcc main4.c -o 4.elf}
+        \item \texttt{gcc main4.c -o 4.elf -lmath}
+    \end{enumerate}
+    What do you see and why does this happen?
+\end{aufgabe}
+
+\begin{aufgabe}
+    What is the difference between the following:
+    \begin{enumerate}
+        \item \texttt{\#include "library.h"}
+        \item \texttt{\#include <library.h>}
+    \end{enumerate}
+    How does this relate to calling the linker?
+\end{aufgabe}
+
+\begin{aufgabe}
+    Create a new repository on GitHub, called \texttt{personal\_helpers}.
+    Clone the empty repository to your home-directory.
+    Navigate into it and create a new file called \texttt{personal\_helpers.h} as well as a new file called \texttt{personal\_helpers.c}.
+    Declare the following function in \texttt{personal\_helpers.h}:
+    \begin{lstlisting}
+    int f(int, int);
+    \end{lstlisting}
+    Define the function in \texttt{personal\_helpers.c}:
+    \begin{lstlisting}
+    int f(int x, int y){
+        return x+y;
+    }
+    \end{lstlisting}
+    Commit this change to your repository, and push it to your GitHub account.
+    Now run the following commands:
+    \begin{lstlisting}
+    gcc -c personal_helpers.c -o personal_helpers.o
+    ar -rc libpersonal_helpers.a personal_helpers.o
+    sudo cp libpersonal_helpers.a /usr/local/lib
+    sudo cp personal_helpers.h /usr/local/include
+    \end{lstlisting}
+    With these commands, we compiled our personal helper library, wie build a linker-readable archive, and copied it to \texttt{/usr/local/lib} and to \texttt{/usr/local/include}.
+    Go to your home-directory and make a new directory called \texttt{any\_new\_project}.
+    Write a file called \texttt{main5.c} that contains the following main function definition:
+    \begin{lstlisting}
+    #include <personal_helpers.h>
+    int main(){
+        return f(1,2);
+    }
+    \end{lstlisting}
+    Compile it with the following command:
+    \begin{lstlisting}
+    gcc main5.c -o 5.elf -l personal_helpers
+    \end{lstlisting}
+    Can you explain, what the \texttt{-l} option does?
+\end{aufgabe}
+
+\begin{aufgabe}
+    Since the process of compiling and archiving libraries can be tedious, we'd like to automate it for us.
+    Automating the build process of C-programs is usually done by a tool called \texttt{make}.
+    It functions as sort of a shell-script, but with a little different syntax and is always called \texttt{MAKEFILE} or \texttt{makefile}.
+    A makefile typically contains so called recipies. 
+    A recipie is a set of commands, that are executed in a certain order.
+    It consists of the following parts:
+    \begin{itemize}
+        \item The name of the target
+        \item The name of the source-files it depends on
+        \item The commands to be executed
+    \end{itemize}
+    A recipie is written as follows:
+    \begin{lstlisting}
+    TARGET: SOURCES
+        COMMANDS
+    \end{lstlisting}
+    The name of the target is typically the name of the file, that is to be created, but we can also use other names.
+    If we would like to use other names, that will not produce files with the same name, we mark them as \texttt{.PHONY}.
+    For our example, the makefile could look like this:
+    \begin{lstlisting}
+    .PHONY build install clean
+    
+    # This compiles the source-files
+    build: personal_helpers.c personal_helpers.h
+        gcc -c personal_helpers.c -o personal_helpers.o
+        ar -rc libpersonal_helpers.a personal_helpers.o
+    
+    # This installes the library and must be run with sudo-permissions
+    install: build
+        cp libpersonal_helpers.a /usr/local/lib
+        cp personal_helpers.h /usr/local/include
+    
+    # This removes the object-files
+    clean:
+        rm personal_helpers.o
+        rm libpersonal_helpers.a
+    \end{lstlisting}
+    Write this into a file called \texttt{makefile}.
+    Run \texttt{make build}, \texttt{sudo make install} and then \texttt{make clean}.
+    Add and commit your makefile to your repository and push it.
+    This library shall now contain all of the helper-functions you will write over the next semester.
+    This makefile is merely an example. 
+    There are many more things, that you can automate with makefiles.
+\end{aufgabe}
+
+
+\section*{Annotations}
 \begin{enumerate}
-    \item Link zu einem YouTube-Video: \url{https://www.youtube.com}
+    \item Full blown MAKEFILE for this exercise: \href{https://gist.github.com/bjoekeldude/738a19d7309a6cad95d4ae75f1b702a8}{Gist}
 \end{enumerate}
 
 \end{document}
