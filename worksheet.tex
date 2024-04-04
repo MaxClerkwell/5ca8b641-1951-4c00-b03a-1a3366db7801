@@ -159,7 +159,7 @@
     If we would like to use other names, that will not produce files with the same name, we mark them as \texttt{.PHONY}.
     For our example, the makefile could look like this:
     \begin{lstlisting}
-    .PHONY build install clean
+    .PHONY: build install clean
     
     # This compiles the source-files
     build: personal_helpers.c personal_helpers.h
@@ -176,7 +176,7 @@
         rm personal_helpers.o
         rm libpersonal_helpers.a
     \end{lstlisting}
-    Write this into a file called \texttt{makefile}.
+    Write this into a file called \texttt{makefile} and make sure, that indented line-endings are done with tabs, not with spaces.
     Run \texttt{make build}, \texttt{sudo make install} and then \texttt{make clean}.
     Add and commit your makefile to your repository and push it.
     This library shall now contain all of the helper-functions you will write over the next semester.
